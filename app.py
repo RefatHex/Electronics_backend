@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import openpyxl
 import os
-from datetime import datetime  # For generating timestamps
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -40,6 +40,35 @@ def add_to_excel():
     workbook.save(file_name)
 
     return jsonify({"message": "Data added to Excel successfully!"}), 200
+
+# API route to retrieve the latest row from the Excel file
+@app.route('/get_entry', methods=['GET'])
+def get_latest_entry():
+    # File name for the Excel file
+    file_name = "data.xlsx"
+    
+    if not os.path.exists(file_name):
+        return jsonify({"error": "Excel file not found"}), 404
+
+    workbook = openpyxl.load_workbook(file_name)
+    sheet = workbook.active
+
+    if sheet.max_row < 2:  # Check if there are any rows other than the header
+        return jsonify({"error": "No data available"}), 404
+
+    # Get the latest row (excluding the header)
+    latest_row = list(sheet.iter_rows(values_only=True))[-1]
+    
+    # Create an object for the latest entry
+    latest_entry = {
+        "timestamp": latest_row[0],
+        "ph_value": latest_row[1],
+        "turbidity": latest_row[2],
+        "temperature": latest_row[3],
+        "flow_value": latest_row[4]
+    }
+
+    return jsonify({"latest_entry": latest_entry}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
