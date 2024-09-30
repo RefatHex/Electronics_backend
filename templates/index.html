@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="120" />
+    <title>pH Test Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Inline CSS for styling the page -->
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f4f8;
+      }
+
+      .container {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar {
+        background-color: #6c757d;
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        height: 100vh;
+      }
+
+      .sidebar h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      .nav-link {
+        color: white !important;
+      }
+
+      .right-sidebar {
+        background-color: #4b6584;
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        height: 100vh;
+      }
+
+      .card {
+        background-color: #4b6584;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+      }
+
+      h3 {
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .circular-chart {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background-color: #f0f4f8;
+        margin: 0 auto;
+        text-align: center;
+        color: #4b6584;
+        font-size: 22px;
+        font-weight: bold;
+        border: 8px solid #f0f4f8;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .row {
+        margin-top: 20px;
+      }
+
+      /* Circular Chart Animation */
+      .circular-chart[data-percent="96"] {
+        background: conic-gradient(#26de81 0% 96%, #d1d8e0 96%);
+      }
+
+      .circular-chart[data-percent="50"] {
+        background: conic-gradient(#fed330 0% 50%, #d1d8e0 50%);
+      }
+
+      .circular-chart[data-percent="35"] {
+        background: conic-gradient(#45aaf2 0% 35%, #d1d8e0 35%);
+      }
+
+      .circular-chart[data-percent="66"] {
+        background: conic-gradient(#fd9644 0% 66%, #d1d8e0 66%);
+      }
+
+      .circular-chart[data-percent="80"] {
+        background: conic-gradient(#e74c3c 0% 80%, #d1d8e0 80%);
+      }
+
+      .circular-chart[data-percent="30"] {
+        background: conic-gradient(#9b59b6 0% 30%, #d1d8e0 30%);
+      }
+
+      .right-sidebar-content {
+        list-style-type: none;
+        padding-left: 0;
+        margin-top: 20px;
+      }
+
+      .right-sidebar-content li {
+        margin-bottom: 15px;
+      }
+
+      .right-sidebar-content li span {
+        font-size: 18px;
+        color: white;
+      }
+
+      .ph-value-badge {
+        background-color: #4b6584;
+        padding: 10px;
+        border-radius: 10px;
+        display: inline-block;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="sidebar">
+            <h2>Explore</h2>
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link" href="#">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/logs">logs</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Community</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Testing Tutorial</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card p-3">
+            <h3>
+              pH reveals the balance between acid and base in every solution
+            </h3>
+
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div class="circular-chart" data-percent="{{ ph_value }}">
+                  <span>pH Value: {{ ph_value }}</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="circular-chart" data-percent="{{ temperature }}">
+                  <span>Temperature: {{ temperature }}°C</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div class="circular-chart" data-percent="{{ flow_value }}">
+                  <span>Flow Value: {{ flow_value }}%</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="circular-chart" data-percent="{{ turbidity }}">
+                  <span>Turbidity: {{ turbidity }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-3">
+          <div class="right-sidebar">
+            <h4 class="text-center">pH Test</h4>
+            <p class="text-center">For accurate value</p>
+            <ul class="right-sidebar-content">
+              <li><span>Battery Acid (pH = 0)</span></li>
+              <li><span>Sulfuric Acid (pH = 1)</span></li>
+              <li><span>Pure Water (pH = 7)</span></li>
+              <li><span>Sea Water (pH = 8)</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
