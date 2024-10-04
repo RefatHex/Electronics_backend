@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include "OneWire.h"
 #include "DallasTemperature.h"
+#include <HTTPClient.h>  // Include HTTPClient library for POST request
+#include <ArduinoJson.h> // Include ArduinoJson for easier JSON handling
 
 // Pin for temp sensor
 #define ONE_WIRE_BUS 4 
@@ -25,11 +27,14 @@ const int ph_delay = 1000;
 
 // Flow sensor setup
 volatile int NumPulses = 0;
-int PinSensor = 2;
+int PinSensor = 16;
 float factor_conversion = 7.5;
 float volume = 0;
 long dt = 0;
 long t0 = 0;
+
+// Server URL
+const char* serverUrl = "https://refathex.pythonanywhere.com/get_entry";
 
 // Functions for flow sensor
 void IRAM_ATTR PulseCount() {
@@ -61,7 +66,6 @@ void setup() {
 
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Failed to connect to WiFi");
-    // Handle WiFi failure case
   } else {
     Serial.println("Connected to WiFi");
     Serial.print("IP Address: ");
@@ -78,21 +82,16 @@ void loop() {
 
   // Turbidity sensor code
   int sensorValue = analogRead(turbiditysensorPin);
-
-  // Map sensor value to range -100 to 100
   int turbidity = map(sensorValue, 0, 4095, -100, 100);
-
-  // Constrain the value to stay within -100 to 100
   turbidity = constrain(turbidity, -10, 10);
 
   // pH sensor code
   if (millis() - last_ph_time > ph_delay) {
     for (int i = 0; i < 10; i++) {
       buffer_arr[i] = analogRead(PhSensorPin);
-      delay(1);  // Shorten delay to avoid blocking
+      delay(10);
     }
 
-    // Sort buffer array (Simple bubble sort)
     for (int i = 0; i < 9; i++) {
       for (int j = i + 1; j < 10; j++) {
         if (buffer_arr[i] > buffer_arr[j]) {
@@ -111,7 +110,7 @@ void loop() {
     float volt = (float)avgval * 5 / 4096 / 6;
     ph_act = 5.70 * volt - calibration_value;
 
-    last_ph_time = millis();  // Reset timing for next pH measurement
+    last_ph_time = millis();
   }
 
   // Flow sensor code
@@ -128,27 +127,41 @@ void loop() {
   // Temperature sensor loop
   sensors.requestTemperatures();
   float tempC = sensors.getTempCByIndex(0);
-  float tempF = sensors.getTempFByIndex(0);
+  
+  // Prepare and send data
+  if (WiFi.status() == WL_CONNECTED) {  // Check if ESP is still connected to WiFi
+    HTTPClient http;
+    http.begin(serverUrl);  // Specify server URL
 
-  // Print all sensor values formatted
-  Serial.print("Turbidity: ");
-  Serial.print(turbidity);
-  Serial.print(" NTU\tpH: ");
-  Serial.print(ph_act, 2);
-  Serial.print("\tFlow: ");
-  Serial.print(flow_L_m, 3);
-  Serial.print(" L/min\tVolume: ");
-  Serial.print(volume, 3);
-  Serial.println(" L");
+    http.addHeader("Content-Type", "application/json");  // Set content type to JSON
 
-  Serial.print("Temperature: ");
-  Serial.print(tempC);
-  Serial.print(" \xC2\xB0"); 
-  Serial.print("C  |  ");
+    // Create JSON object
+    StaticJsonDocument<200> jsonDoc;
+    jsonDoc["flow_value"] = flow_L_m;
+    jsonDoc["temperature"] = tempC;
+    jsonDoc["turbidity"] = turbidity;
+    jsonDoc["ph_value"] = ph_act;
 
-  Serial.print(tempF);
-  Serial.print(" \xC2\xB0");
-  Serial.println("F");
+    // Serialize JSON object
+    String requestBody;
+    serializeJson(jsonDoc, requestBody);
 
-  delay(1000);  // Shorten delay
+    // Send HTTP POST request
+    int httpResponseCode = http.POST(requestBody);
+
+    if (httpResponseCode > 0) {
+      String response = http.getString();  // Get the response to the request
+      Serial.println(httpResponseCode);  // Print return code
+      Serial.println(response);  // Print response
+    } else {
+      Serial.print("Error on sending POST: ");
+      Serial.println(httpResponseCode);
+    }
+
+    http.end();  // End the HTTP connection
+  } else {
+    Serial.println("WiFi Disconnected");
+  }
+
+  delay(3000);  // Delay between posts
 }

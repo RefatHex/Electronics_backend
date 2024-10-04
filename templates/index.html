@@ -10,7 +10,6 @@
       rel="stylesheet"
     />
 
-    <!-- Inline CSS for styling the page -->
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -24,12 +23,13 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
 
-      .sidebar {
+      .sidebar,
+      .right-sidebar {
         background-color: #6c757d;
         padding: 20px;
         border-radius: 10px;
         color: white;
-        height: 100vh;
+        margin-bottom: 20px;
       }
 
       .sidebar h2 {
@@ -39,14 +39,6 @@
 
       .nav-link {
         color: white !important;
-      }
-
-      .right-sidebar {
-        background-color: #4b6584;
-        padding: 20px;
-        border-radius: 10px;
-        color: white;
-        height: 100vh;
       }
 
       .card {
@@ -129,13 +121,35 @@
         border-radius: 10px;
         display: inline-block;
       }
+
+      /* Media queries for mobile responsiveness */
+      @media (max-width: 768px) {
+        .sidebar,
+        .right-sidebar {
+          height: auto;
+        }
+
+        .circular-chart {
+          width: 120px;
+          height: 120px;
+          font-size: 18px;
+        }
+
+        h3 {
+          font-size: 18px;
+        }
+
+        .card {
+          padding: 10px;
+        }
+      }
     </style>
   </head>
 
   <body>
     <div class="container-fluid">
       <div class="row">
-        <div class="col-md-3">
+        <div class="col-lg-3 col-md-4 col-sm-12">
           <div class="sidebar">
             <h2>Explore</h2>
             <ul class="nav flex-column">
@@ -143,7 +157,7 @@
                 <a class="nav-link" href="#">Home</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/logs">logs</a>
+                <a class="nav-link" href="/logs">Logs</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#">Community</a>
@@ -155,19 +169,19 @@
           </div>
         </div>
 
-        <div class="col-md-6">
-          <div class="card p-3">
+        <div class="col-lg-6 col-md-8 col-sm-12">
+          <div class="card">
             <h3>
               pH reveals the balance between acid and base in every solution
             </h3>
 
             <div class="row mt-4">
-              <div class="col-md-6">
+              <div class="col-6">
                 <div class="circular-chart" data-percent="{{ ph_value }}">
                   <span>pH Value: {{ ph_value }}</span>
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-6">
                 <div class="circular-chart" data-percent="{{ temperature }}">
                   <span>Temperature: {{ temperature }}°C</span>
                 </div>
@@ -175,12 +189,12 @@
             </div>
 
             <div class="row mt-4">
-              <div class="col-md-6">
+              <div class="col-6">
                 <div class="circular-chart" data-percent="{{ flow_value }}">
                   <span>Flow Value: {{ flow_value }}%</span>
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-6">
                 <div class="circular-chart" data-percent="{{ turbidity }}">
                   <span>Turbidity: {{ turbidity }}%</span>
                 </div>
@@ -189,8 +203,7 @@
           </div>
         </div>
 
-        <!-- Right Sidebar -->
-        <div class="col-md-3">
+        <div class="col-lg-3 col-md-12 col-sm-12">
           <div class="right-sidebar">
             <h4 class="text-center">pH Test</h4>
             <p class="text-center">For accurate value</p>
