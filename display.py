@@ -1,17 +1,18 @@
-from flask import Flask, render_template
+import os
 import requests
+from flask import Flask, render_template, send_file
 
 app = Flask(__name__)
 
-API_URL = "https://refathex.pythonanywhere.com/get_entry"
+API_URL = "https://refathex.pythonanywhere.com"
 
 @app.route('/')
 def index():
-    response = requests.get(API_URL)
+    response = requests.get(f"{API_URL}/get_entry")
     data = response.json()["latest_entry"]
 
     ph_value = data["ph_value"]
-    temperature = data["temperature"].replace("C", "")
+    temperature = data["temperature"]
     flow_value = data["flow_value"]
     turbidity = data["turbidity"]
 
@@ -20,22 +21,19 @@ def index():
 
 @app.route('/logs')
 def logs():
-    # Fetch data from the API
-    response = requests.get(API_URL)
+    response = requests.get(f"{API_URL}/get_entry")
     data = response.json()["latest_entry"]
 
     ph_value = data["ph_value"]
-    temperature = data["temperature"].replace("C", "")
+    temperature = data["temperature"]
     flow_value = data["flow_value"]
     turbidity = data["turbidity"]
 
-    # Prepare logs based on the data
     logs = []
 
     # pH Value analysis
     if float(ph_value) > 12:
         logs.append("As the pH is over 12, it is considered alkaline. You need to add a neutralizing solution.")
-        print("pH is too high, adding log.")
     elif float(ph_value) < 6:
         logs.append("As the pH is below 6, it is considered acidic. You need to add a base solution.")
     else:
@@ -67,10 +65,20 @@ def logs():
         logs.append(f"Turbidity is {turbidity}, which is too low. Check for possible issues.")
     else:
         logs.append("Turbidity is within acceptable range.")
-    print(logs)
 
     return render_template('logs.html', logs=logs)
 
+@app.route('/get_database')
+def download_database():
+    FILE_DOWNLOAD_URL = "https://refathex.pythonanywhere.com/get_database"
+    
+    response = requests.get(FILE_DOWNLOAD_URL)
+    file_path = "downloaded_database.xlsx"  
+
+    with open(file_path, 'wb') as file:
+        file.write(response.content)
+
+    return send_file(file_path, as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True, port=8082)

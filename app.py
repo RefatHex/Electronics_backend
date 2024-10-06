@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 import openpyxl
 import os
 from datetime import datetime
@@ -69,6 +69,18 @@ def get_latest_entry():
     }
 
     return jsonify({"latest_entry": latest_entry}), 200
+
+@app.route('/get_database', methods=['GET'])
+def get_database():
+    file_name = "data.xlsx"
+    
+    if not os.path.exists(file_name):
+        return jsonify({"error": "Excel file not found"}), 404
+    
+    try:
+        return send_file(file_name, as_attachment=True)
+    except Exception as e:
+        return str(e), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
