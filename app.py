@@ -3,6 +3,21 @@ import openpyxl
 import os
 from datetime import datetime
 
+# ML integration -----------------------------------------------------------
+# Import ML helpers from ML.py. This allows app.py to call ML.predict(...) without
+# retraining; artifacts are loaded from ml_artifacts.joblib by load_artifacts().
+from ML import load_artifacts, predict
+
+# Load model artifacts at startup (best-effort). If artifacts are missing the app
+# will still start; run `python ML.py` once to create artifacts (ml_artifacts.joblib).
+try:
+    load_artifacts()
+except Exception:
+    # Artifacts not present yet — that's okay for now. They can be created by
+    # running ML.py manually. We avoid failing fast so development can continue.
+    pass
+# -------------------------------------------------------------------------
+
 app = Flask(__name__)
 
 def load_or_create_excel(file_name):
@@ -69,6 +84,44 @@ def get_latest_entry():
     }
 
     return jsonify({"latest_entry": latest_entry}), 200
+
+
+@app.route('/predict_latest', methods=['GET'])
+def predict_latest():
+    file_name = "data.xlsx"
+    if not os.path.exists(file_name):
+        return jsonify({"error": "Excel file not found"}), 404
+
+    workbook = openpyxl.load_workbook(file_name)
+    sheet = workbook.active
+    if sheet.max_row < 2:
+        return jsonify({"error": "No data available"}), 404
+
+    latest_row = list(sheet.iter_rows(values_only=True))[-1]
+
+    # Build the features dict in the exact shape expected by ML.predict().
+    # Note: column indices come from how we append rows in /add_to_excel:
+    # [Timestamp, Ph_Value, Turbidity, Temperature, Flow_Value]
+    features = {
+        # ML expects the following keys: temperature_C, pH, turbidity_NTU, flow_m_s, trash_detected
+        'temperature_C': latest_row[3],
+        'pH': latest_row[1],
+        'turbidity_NTU': latest_row[2],
+        'flow_m_s': latest_row[4],
+        # The spreadsheet currently doesn't include trash_detected, so we default to 0 (No).
+        'trash_detected': 0
+    }
+
+    # Call the ML.predict function imported from ML.py. This will use the
+    # pre-loaded artifacts (model, scaler, encoders) to produce decoded labels
+    # and numeric values for each output column.
+    try:
+        prediction = predict(features)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Return the prediction as JSON to the client
+    return jsonify({"prediction": prediction}), 200
 
 @app.route('/get_database', methods=['GET'])
 def get_database():
